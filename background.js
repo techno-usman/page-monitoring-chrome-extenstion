@@ -12,7 +12,20 @@ chrome.runtime.onConnect.addListener((port) => {
         console.log(tabs);
         activeTab = tabs[0];
 
-        port.postMessage({ tab: activeTab });
+        port.postMessage({ type: 'TAB_INFO', tab: activeTab });
+
+        const url = new URL(activeTab.url);
+        const storageKey = url.hostname + '_' + activeTab.id;
+
+        chrome.storage.local.get(storageKey).then((response) => {
+          console.log('THERE');
+          if (typeof response[storageKey] !== 'undefined') {
+            console.log('HERETHERE');
+            if (response[storageKey]) {
+              port.postMessage({ type: 'MONITERING_INFO', startMonitering: true });
+            }
+          }
+        });
       });
     }
   });
@@ -33,29 +46,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         console.log('Injected');
       }
     );
-
+    /*
     chrome.storage.local.clear(() => {
       var error = chrome.runtime.lastError;
       if (error) {
         console.error(error);
       }
     });
-
-    /*
-    const url = new URL(tab.url);
-    const storageKey = url.hostname + '_' + tabId;
-
-    chrome.storage.local.get(storageKey).then((response) => {
-      if (typeof response[storageKey] !== 'undefined') {
-        if (response[storageKey]) {
-          console.log('test......');
-
-          const port = chrome.runtime.connect({ name: 'connect' });
-          port.postMessage({ type: 'CONTINUE_PAGE_MONITORING' });
-        }
-      }
-    });
-
     */
   }
 });

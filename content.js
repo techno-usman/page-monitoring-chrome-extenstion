@@ -66,21 +66,28 @@
   };
 
   const clickElementEventHandler = function clickHandler(e) {
-    console.log(e);
-    e.preventDefault();
+    console.log(e.target);
     findComponent(e);
+  };
+
+  const start = () => {
+    document.body.addEventListener('click', clickElementEventHandler);
+    document.body.addEventListener('change', typeEventHandler);
+  };
+
+  const stop = () => {
+    const el = document.body;
+    clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
   };
 
   chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     if (request.type == 'START') {
-      document.body.addEventListener('click', clickElementEventHandler);
-      document.body.addEventListener('change', typeEventHandler);
+      start();
     }
 
     if (request.type == 'END') {
-      const el = document.body;
-      clone = el.cloneNode(true);
-      el.parentNode.replaceChild(clone, el);
+      stop();
     }
 
     sendResponse({});
@@ -91,7 +98,14 @@
   port.postMessage({ type: 'TAB_INFORMATION' });
 
   port.onMessage.addListener((response) => {
-    console.log(response.tab);
-    activeTab = response.tab;
+    if (response.type === 'TAB_INFO') {
+      activeTab = response.tab;
+    }
+
+    if (response.type === 'MONITERING_INFO') {
+      if (response.startMonitering) {
+        start();
+      }
+    }
   });
 })();
